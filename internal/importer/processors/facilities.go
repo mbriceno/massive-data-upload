@@ -28,25 +28,19 @@ func (p *FacilitiesProcessor) ProcessRow(row []string) (interface{}, error) {
 
 	facilityName := row[4]
 	entity3Name := row[3]
+	entity2Name := row[2]
+	entity1Name := row[1]
 
 	// Validar datos mínimos
-	if facilityName == "" || entity3Name == "" {
-		return nil, errors.New("Facility or admin entity 3 required")
+	if facilityName == "" || entity3Name == "" || entity2Name == "" || entity1Name == "" {
+		return nil, errors.New("Facility or admin entity names are required")
 	}
 
 	// Buscar el ID del AdminEntity3 (Uso de caché transitoria)
-	var entity3ID uint
-	if id, exist := p.cacheAdminEntity3[entity3Name]; exist {
-		entity3ID = id
-	} else {
-		var ae3 domain.AdminEntity3
-		// Aquí puedes complicar el query tanto como necesites uniendo con Entity 2 y 1 para validar la jerarquía
-		err := p.db.Where("name = ?", entity3Name).First(&ae3).Error
-		if err != nil {
-			return nil, errors.New("Admin entity 3 not found: " + entity3Name)
-		}
-		entity3ID = ae3.ID
-		p.cacheAdminEntity3[entity3Name] = ae3.ID
+
+	entity3ID, err := p.getAdminEntity3ID(entity3Name, entity2Name, entity1Name)
+	if err != nil {
+		return nil, err
 	}
 
 	isWarehouse, _ := strconv.ParseBool(row[5])
@@ -67,6 +61,28 @@ func (p *FacilitiesProcessor) ProcessRow(row []string) (interface{}, error) {
 		CubicCapacity:     int32(capacity),
 		IsPopupFacility:   isPopup,
 	}, nil
+}
+
+func (p *FacilitiesProcessor) getAdminEntity3ID(entity3Name, entity2Name, entity1Name string) uint, error {
+	cacheKey := entity1Name + "|" + entity2Name + "|" + entity3Name
+	var entity3ID uint
+	if id, exist := p.cacheAdminEntity3[cacheKey]; exist {
+		entity3ID = id
+	} else {
+		var ae3 domain.AdminEntity3
+		err := p.db.
+			Joins("AdminEntity2.AdminEntity1").
+			Where("tb_admin_entities3.admin_entity3_name = ?", entity3Name).
+			Where("AdminEntity2.admin_entity2_name = ?", entity2Name).
+			Where("AdminEntity2__AdminEntity1.admin_entity1_name = ?", entity1Name).
+			First(&ae3).Error
+		if err != nil {
+			return 0, errors.New("Admin entity 3 not found: " + entity3Name)
+		}
+		entity3ID = ae3.ID
+		p.cacheAdminEntity3[cacheKey] = ae3.ID
+	}
+	return entity3ID, nil
 }
 
 func (p *FacilitiesProcessor) FlushBatch(db *gorm.DB, batch []any) error {
