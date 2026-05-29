@@ -49,8 +49,9 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	processorsRegistry := make(map[string]importer.TabProcessor)
-	processorsRegistry["facilities"] = processors.NewFacilitiesProcessor(dbClient.GormDB)
+	processorsRegistry := map[string]importer.TabProcessor{
+		"facilities": processors.NewFacilitiesProcessor(dbClient.GormDB),
+	}
 
 	pool := importer.NewWorkerPool(dbClient.GormDB, processorsRegistry)
 

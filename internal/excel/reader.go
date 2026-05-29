@@ -80,5 +80,13 @@ func (re *ReaderEngine) ProcessTabByStreaming(ctx context.Context, filePath stri
 				bufferLote = make([]any, 0, re.batchSize)
 			}
 		}
+
+		if len(bufferLote) > 0 {
+			batchChannel <- importer.BatchData{
+				TabName:  sheetName,
+				DataRows: bufferLote,
+			}
+			bufferLote = make([]any, 0, re.batchSize)
+		}
 	}
 }

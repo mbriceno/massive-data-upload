@@ -1,9 +1,7 @@
 package domain
 
-import "gorm.io/gorm"
-
 type Facility struct {
-	gorm.Model
+	ID                uint         `gorm:"primaryKey"`
 	FacilityName      string       `gorm:"type:varchar(150);not null"`
 	AdminEntity3ID    uint         `gorm:"column:admin_entity3_id;not null"`
 	AdminEntity3      AdminEntity3 `gorm:"foreignKey:AdminEntity3ID"`
