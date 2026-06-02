@@ -3,6 +3,8 @@
 ## Overview
 This project is a high-performance CLI utility written in Go, designed to import large datasets from Excel files into a PostgreSQL database. It is built to handle "massive" files by using a streaming approach that avoids loading entire spreadsheets into memory, coupled with a concurrent worker pool for efficient database persistence.
 
+<img src="./massive-data-upload-diagram.png" alt="Flow Diagram" width="400" />
+
 ## Architecture
 The application follows a **Producer-Consumer** pattern using Go's concurrency primitives:
 
