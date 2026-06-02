@@ -56,6 +56,7 @@ The application reads configuration from environment variables or a `.env` file 
 | `DB_NAME` | Database name | `mi_empresa` |
 | `DB_PORT` | Database port | `5432` |
 | `NUM_WORKERS` | Number of concurrent DB writers | `4` |
+| `BATCH_SIZE` | Number of rows each worker will process | `1000` |
 
 ### Installation
 ```bash
