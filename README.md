@@ -76,5 +76,3 @@ go run cmd/processor-cli/main.go --file=your_data_file.xlsx
 # Run builded binary
 ./bin/massive-data-upload --file your_data_file.xlsx
 ```
-
-*Note: Currently, the tool expects a sheet named `facilities` to process data using the implemented FacilitiesProcessor.*
