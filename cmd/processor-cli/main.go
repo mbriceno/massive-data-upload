@@ -50,7 +50,8 @@ func main() {
 	defer cancel()
 
 	processorsRegistry := map[string]importer.TabProcessor{
-		"facilities": processors.NewFacilitiesProcessor(dbClient.GormDB),
+		"facilities":   processors.NewFacilitiesProcessor(dbClient.GormDB),
+		"demographics": processors.NewDemographicsProcessor(dbClient.GormDB),
 	}
 
 	pool := importer.NewWorkerPool(dbClient.GormDB, processorsRegistry)

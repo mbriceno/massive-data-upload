@@ -10,15 +10,15 @@ import (
 )
 
 type FacilitiesProcessor struct {
-	db *gorm.DB
-	// Caché local para evitar ir a la DB por cada fila si los nombres se repiten
-	cacheAdminEntity3 map[string]uint
+	BaseProcessor
 }
 
 func NewFacilitiesProcessor(db *gorm.DB) *FacilitiesProcessor {
 	return &FacilitiesProcessor{
-		db:                db,
-		cacheAdminEntity3: make(map[string]uint),
+		BaseProcessor: BaseProcessor{
+			db:                db,
+			cacheAdminEntity3: make(map[string]uint),
+		},
 	}
 }
 
@@ -75,28 +75,4 @@ func (p *FacilitiesProcessor) FlushBatch(db *gorm.DB, batch []any) error {
 	}
 	// GORM ejecutará un único INSERT masivo y tipado
 	return db.Create(&facilities).Error
-}
-
-func (p *FacilitiesProcessor) getAdminEntity3ID(entity3Name, entity2Name, entity1Name string) (uint, error) {
-	cacheKey := strings.ToLower(entity1Name) + "|" +
-		strings.ToLower(entity2Name) + "|" +
-		strings.ToLower(entity3Name)
-	var entity3ID uint
-	if id, exist := p.cacheAdminEntity3[cacheKey]; exist {
-		entity3ID = id
-	} else {
-		var ae3 domain.AdminEntity3
-		err := p.db.
-			Joins("AdminEntity2.AdminEntity1").
-			Where("tb_admin_entities3.admin_entity3_name = ?", entity3Name).
-			Where("\"AdminEntity2\".admin_entity2_name = ?", entity2Name).
-			Where("\"AdminEntity2__AdminEntity1\".admin_entity1_name = ?", entity1Name).
-			First(&ae3).Error
-		if err != nil {
-			return 0, errors.New("Admin entity 3 not found: " + entity3Name)
-		}
-		entity3ID = ae3.ID
-		p.cacheAdminEntity3[cacheKey] = ae3.ID
-	}
-	return entity3ID, nil
 }

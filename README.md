@@ -60,11 +60,21 @@ The application reads configuration from environment variables or a `.env` file 
 go mod tidy
 ```
 
+### Building
+
+```bash
+go build -o bin/massive-data-upload cmd/processor-cli/main.go
+```
+
 ### Usage
 Run the CLI by pointing to an Excel file using the `--file` flag:
 
 ```bash
+# Run directly with go
 go run cmd/processor-cli/main.go --file=your_data_file.xlsx
+
+# Run builded binary
+./bin/massive-data-upload --file your_data_file.xlsx
 ```
 
 *Note: Currently, the tool expects a sheet named `facilities` to process data using the implemented FacilitiesProcessor.*
