@@ -66,7 +66,7 @@ func main() {
 	startTime := time.Now()
 	fmt.Printf("🚀 Starting dynamic pipeline [File: %s] [Workers: %d]...\n", *excelPathFlag, cfg.NumWorkers)
 
-	reader := excel.NewReaderEngine(processorsRegistry, importer.BatchSize)
+	reader := excel.NewReaderEngine(processorsRegistry, cfg.BatchSize)
 	reader.ProcessTabByStreaming(ctx, *excelPathFlag, batchChannel)
 
 	close(batchChannel)

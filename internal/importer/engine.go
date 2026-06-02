@@ -9,10 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	BatchSize   = 500
-	MaxWaitTime = 2 * time.Second
-)
+const MaxWaitTime = 2 * time.Second
 
 type BatchData struct {
 	TabName  string

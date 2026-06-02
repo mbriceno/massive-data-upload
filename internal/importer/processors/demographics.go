@@ -110,7 +110,6 @@ func (p *DemographicsProcessor) FlushBatch(db *gorm.DB, batch []any) error {
 	}
 
 	// 1. Deduplicate Demographics and merge their PersonsSections
-	// This prevents "ON CONFLICT DO UPDATE command cannot affect row a second time"
 	type demoKey struct {
 		ae3  uint
 		edu  domain.Education
@@ -159,22 +158,33 @@ func (p *DemographicsProcessor) FlushBatch(db *gorm.DB, batch []any) error {
 
 	// 3. Pre-save all unique PersonsSections to ensure they have IDs
 	if len(sectionMap) > 0 {
-		uniqueSections := make([]domain.PersonsSection, 0, len(sectionMap))
+		uniqueSections := make([]*domain.PersonsSection, 0, len(sectionMap))
 		for _, s := range sectionMap {
-			uniqueSections = append(uniqueSections, *s)
+			uniqueSections = append(uniqueSections, s)
 		}
 
-		// We use a dummy update to force PostgreSQL to return the ID even if the record exists
 		err := db.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "gender"}, {Name: "age"}, {Name: "persons_number"}},
 			DoUpdates: clause.AssignmentColumns([]string{"gender"}),
-		}).Create(&uniqueSections).Error
+		}).Create(uniqueSections).Error
 		if err != nil {
 			return err
 		}
 
-		// Note: In a production scenario, you might need to re-map IDs back to the
-		// demographics slice if GORM doesn't update the underlying pointers automatically.
+		// Sync IDs back to all instances in the demographics slice.
+		// Cases where different rows pointed to identical sections.
+		for i := range uniqueDemographics {
+			for j := range uniqueDemographics[i].PersonsSections {
+				s := &uniqueDemographics[i].PersonsSections[j]
+				if s.ID != 0 {
+					continue
+				}
+				key := sectionKey{s.Gender, s.Age, s.PersonsNumber}
+				if resolved, ok := sectionMap[key]; ok {
+					uniqueDemographics[i].PersonsSections[j].ID = resolved.ID
+				}
+			}
+		}
 	}
 
 	// 3. Save Demographics
@@ -186,7 +196,6 @@ func (p *DemographicsProcessor) FlushBatch(db *gorm.DB, batch []any) error {
 			{Name: "near_hospital_distance"},
 			{Name: "poverty"},
 		},
-		// Use a dummy update to ensure RETURNING id works for existing records
 		DoUpdates: clause.AssignmentColumns([]string{"education"}),
 	}).Create(&uniqueDemographics).Error
 }

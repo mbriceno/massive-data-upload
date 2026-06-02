@@ -11,6 +11,7 @@ import (
 type Config struct {
 	DBDSN      string
 	NumWorkers int
+	BatchSize  int
 }
 
 // Load lee el entorno
@@ -34,9 +35,16 @@ func Load() *Config {
 		workers = 4 // Fallback en caso de que pongan texto inválido en el .env
 	}
 
+	batchSizeStr := getEnv("BATCH_SIZE", "500")
+	batchSize, err := strconv.Atoi(batchSizeStr)
+	if err != nil {
+		batchSize = 500 // Fallback en caso de que pongan texto inválido en el .env
+	}
+
 	return &Config{
 		DBDSN:      dsn,
 		NumWorkers: workers,
+		BatchSize:  batchSize,
 	}
 }
 

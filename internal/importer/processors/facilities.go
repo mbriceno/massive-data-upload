@@ -23,7 +23,7 @@ func NewFacilitiesProcessor(db *gorm.DB) *FacilitiesProcessor {
 }
 
 func (p *FacilitiesProcessor) ProcessRow(row []string) (any, error) {
-	if len(row) < 9 {
+	if len(row) < 10 {
 		return nil, errors.New("Row with insufficient columns")
 	}
 
@@ -32,15 +32,12 @@ func (p *FacilitiesProcessor) ProcessRow(row []string) (any, error) {
 	entity2Name := strings.TrimSpace(row[2])
 	entity1Name := strings.TrimSpace(row[1])
 
-	// Validar datos mínimos
 	if facilityName == "" ||
 		entity3Name == "" ||
 		entity2Name == "" ||
 		entity1Name == "" {
 		return nil, errors.New("Facility or admin entity names are required")
 	}
-
-	// Buscar el ID del AdminEntity3 (Uso de caché transitoria)
 
 	entity3ID, err := p.getAdminEntity3ID(entity3Name, entity2Name, entity1Name)
 	if err != nil {
@@ -68,11 +65,10 @@ func (p *FacilitiesProcessor) ProcessRow(row []string) (any, error) {
 }
 
 func (p *FacilitiesProcessor) FlushBatch(db *gorm.DB, batch []any) error {
-	// Convertimos el slice genérico al tipo struct concreto de GORM para Bulk Insert
 	facilities := make([]domain.Facility, len(batch))
 	for i, item := range batch {
 		facilities[i] = item.(domain.Facility)
 	}
-	// GORM ejecutará un único INSERT masivo y tipado
+
 	return db.Create(&facilities).Error
 }
